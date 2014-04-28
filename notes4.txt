@@ -186,54 +186,35 @@ $ bundle install --without production --binstubs=./bundler_stubs
 $ bundle --binstubs
 
 ************ Guard  (auto run test if rspec files changes)
-# Test gems on Macintosh OS X
-group :test do
-  gem 'rspec-rails', '2.9.0'
-  gem 'capybara', '1.1.2'
-  gem 'rb-fsevent', '0.4.3.1', :require => false #need to use '~> 0.9.1'
-  gem 'growl', '1.0.3'
+group :development, :test do
+  ...
+  gem 'guard-rspec', '2.5.0'
 end
-
-# Test gems on Linux
-group :test do
-  gem 'rspec-rails', '2.9.0'
-  gem 'capybara', '1.1.2'
-  gem 'rb-inotify', '0.8.8'
-  gem 'libnotify', '0.5.9'
-end
-
-# Test gems on Windows
-group :test do
-  gem 'rspec-rails', '2.9.0'
-  gem 'capybara', '1.1.2'
-  gem 'rb-fchange', '0.0.5'
-  gem 'rb-notifu', '0.0.4'
-  gem 'win32console', '1.3.0'
-end 
 
 $ bundle exec guard init rspec
 - Edit Guardfile:
--> guard 'rspec', :version => 2, :all_after_pass => false do 
+-> guard 'rspec', all_after_pass => false do 
 $ bundle exec guard
 
 
 ************ Spork (pre load test env on spool fork server to make each run 
 fast)
 - Add in Gemfile:
-group :test do
-  .
-  .
-  .
-  gem 'guard-spork', '0.3.2'
-  gem 'spork', '0.9.0'
+group :development, :test do
+  ...
+  gem 'spork-rails', '4.0.0'
+  gem 'guard-spork', '1.5.0'
+  gem 'childprocess', '0.5.3'
 end
+
 $ bundle install
 $ bundle exec spork --bootstrap
 - edit the RSpec configuration file, located in spec/spec_helper.rb, so that  
   the environment gets loaded in a prefork block
 $ time bundle exec rspec spec/requests/static_pages_spec.rb
 $ bundle exec spork
--- run with --drb (“distributed Ruby”) option OR put --drb in .rspec
+-- run with --drb (“distributed Ruby”) option OR put --drb in .rspec in app's 
+root dir.
 $ time bundle exec rspec spec/requests/static_pages_spec.rb --drb
 
 - After changing a file included in the prefork loading (such as routes.rb), 
