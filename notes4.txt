@@ -1,0 +1,491 @@
+=============================================================================
+References:
+=============================================================================
+***** Rails
+- The Rails 3 Way by Obie Fernandez.
+- RailsCasts by Ryan Bates: Excellent (mostly) free Rails screencasts
+
+***** Ruby
+- Beginning Ruby, The Well-Grounded Rubyist, or The Ruby Way
+
+
+
+=============================================================================
+Ch 1 - Setup:
+=============================================================================
+IDE - RubyMine
+https://github.com/perfectionist/sample_project/wiki
+Load rvm and ruby together.
+$ curl -L https://get.rvm.io | bash -s stable --ruby 
+
+Editor - Sublime Text 2
+https://github.com/mhartl/rails_tutorial_sublime_text
+
+$ rvm get stable
+$ rvm install 2.1.1 --with-openssl-dir=$HOME/.rvm/usr
+$ rvm use 2.1.1@railstutorial_rails_4_0 --create --default
+$ rvm --help
+$ rvm gemset --help
+
+$ gem update --system 2.1.9
+$ vi ~/.gemrc    (to hide ri rdoc use the following:)
+install: --no-rdoc --no-ri
+update: --no-rdoc --no-ri
+
+$ gem install rails -v 4.1.0
+
+$ git config --global user.name "Your Name"
+$ git config --global user.email your.email@example.com
+$ git config --global alias.co checkout
+
+Update .gitignore:
+# Ignore other unneeded files.
+doc/
+*.swp
+*~
+.project
+.DS_Store
+
+$ git checkout -f
+$ git status
+
+$ git checkout -b modify-README
+Switched to a new branch 'modify-README'
+$ git branch
+master
+* modify-README
+
+$ git checkout master
+$ git merge modify-README
+$ git mergetool -tool=opendiff
+
+$ git branch -d modify-README
+Unlike the -d flag, the -D flag will delete the branch even though we haven’t 
+merged in the changes.
+
+# GitHub  wgu@cisco.com/cisco123
+# create resposity my_app on GitHub
+$ git remote add origin git@github.com:guweihwa/my_app.git
+$ git push -u origin master
+$ git push
+
+- install heroku: https://toolbelt.heroku.com/
+$ heroku login
+
+#Heroku  gu_wh@yahoo.com/cisco123
+$ heroku create
+$ heroku rename pegasus-rails4-app
+$ git push heroku master
+$ heroku run rake db:migrate
+
+# This should only be used if your Heroku deploy fails without it.
+$ rake assets:precompile
+
+=============================================================================
+Ch 2 - Scaffold:
+=============================================================================
+$ rails generate scaffold User name:string email:string
+$ bundle exec rake db:migrate
+$ rails generate scaffold Micropost content:string user_id:integer
+
+class Micropost < ActiveRecord::Base
+  attr_accessible :content, :user_id
+  validates :content, :length => { :maximum => 140 }
+end 
+
+class User < ActiveRecord::Base
+  attr_accessible :email, :name
+  has_many :microposts
+end 
+
+class Micropost < ActiveRecord::Base
+  attr_accessible :content, :user_id
+
+  belongs_to :user
+
+  validates :content, :length => { :maximum => 140 }
+end 
+
+$ rails console
+>> first_user = User.first
+>> first_user.microposts
+
+=============================================================================
+Ch 3 - Rails sample app:
+=============================================================================
+$ rails new sample_app --skip-test-unit
+
+- Edit Gemfile with the gems needed. 
+$ bundle install --without production
+$ bundle update
+$ bundle install
+
+
+$ git init
+$ git add .
+$ git commit -m "Initial commit"
+
+$ git mv README.rdoc README.md
+$ git commit -a -m "Improve the README"
+
+$ git remote add origin git@github.com:guweihwa/sample_app.git
+$ git push -u origin master
+
+$ heroku create
+$ git push heroku master
+
+$ heroku logs
+
+$ rails s (to run app)
+
+- config/initializers/secret_token.rb
+- 
+
+$ rails generate controller StaticPages home help --no-test-framework
+
+
+$ rails generate controller FooBars baz quux
+$ rails destroy  controller FooBars baz quux
+
+$ rails generate model Foo bar:string baz:integer
+$ rails destroy model Foo
+
+$ rake db:migrate
+$ rake db:rollback
+$ rake db:migrate VERSION=0
+
+=============================================================================
+- Test-driven Development
+=============================================================================
+************
+A variant of test-driven development (TDD) known as 
+behavior-driven development (BDD) 
+************
+
+- Configure Rails to use RSpec in place of Test::Unit
+$ rails generate rspec:install
+
+-Edit spec/spec_helper.rb
+RSpec.configure do |config|
+  ...
+  config.include Capybara::DSL
+end
+
+$ rails generate integration_test static_pages
+- Edit requst spec: spec/requests/static_pages_spec.rb
+- run test/edit code/retest:
+$ bundle exec rspec spec/requests/static_pages_spec.rb
+
+
+RVM Bundler Integration
+$ rvm get head && rvm reload
+$ chmod +x $rvm_path/hooks/after_cd_bundler
+
+$ cd ~/rails_projects/sample_app
+$ bundle install --without production --binstubs=./bundler_stubs
+$ bundle --binstubs
+
+************ Guard  (auto run test if rspec files changes)
+# Test gems on Macintosh OS X
+group :test do
+  gem 'rspec-rails', '2.9.0'
+  gem 'capybara', '1.1.2'
+  gem 'rb-fsevent', '0.4.3.1', :require => false #need to use '~> 0.9.1'
+  gem 'growl', '1.0.3'
+end
+
+# Test gems on Linux
+group :test do
+  gem 'rspec-rails', '2.9.0'
+  gem 'capybara', '1.1.2'
+  gem 'rb-inotify', '0.8.8'
+  gem 'libnotify', '0.5.9'
+end
+
+# Test gems on Windows
+group :test do
+  gem 'rspec-rails', '2.9.0'
+  gem 'capybara', '1.1.2'
+  gem 'rb-fchange', '0.0.5'
+  gem 'rb-notifu', '0.0.4'
+  gem 'win32console', '1.3.0'
+end 
+
+$ bundle exec guard init rspec
+- Edit Guardfile:
+-> guard 'rspec', :version => 2, :all_after_pass => false do 
+$ bundle exec guard
+
+
+************ Spork (pre load test env on spool fork server to make each run 
+fast)
+- Add in Gemfile:
+group :test do
+  .
+  .
+  .
+  gem 'guard-spork', '0.3.2'
+  gem 'spork', '0.9.0'
+end
+$ bundle install
+$ bundle exec spork --bootstrap
+- edit the RSpec configuration file, located in spec/spec_helper.rb, so that  
+  the environment gets loaded in a prefork block
+$ time bundle exec rspec spec/requests/static_pages_spec.rb
+$ bundle exec spork
+-- run with --drb (“distributed Ruby”) option OR put --drb in .rspec
+$ time bundle exec rspec spec/requests/static_pages_spec.rb --drb
+
+- After changing a file included in the prefork loading (such as routes.rb), 
+  you will have to restart the Spork server to load the new Rails environment. 
+  
+- Guard with Spork
+$ bundle exec guard init spork
+
+Note that we’ve updated the arguments to guard to include :cli => --drb, which ensures that Guard uses the command-line interface (cli) to the Spork server. We’ve also added a command to watch the spec/support/ directory
+
+With that configuration in place, we can start Guard and Spork at the same time with the guard command:
+$ bundle exec guard
+
+************ Tests inside Sublime Text
+$ cd ~/Library/Application\ Support/Sublime\ Text\ 2/Packages
+$ git clone https://github.com/maltize/sublime-text-2-ruby-tests.git RubyTest
+### start sublime from project dir #### 
+After restarting Sublime Text, the RubyTest package supplies the following 
+commands:
+• Command-Shift-R: run a single test (if run on an it block) or group of tests 
+  (if run on a describe block)
+• Command-Shift-E: run the last test(s)
+• Command-Shift-T: run all the tests in current file
+
+$ rspec spec/
+
+=============================================================================
+Ch 4 - Ruby 
+=============================================================================
+# There’s an important difference between single-quoted and double quoted 
+string; Ruby won’t interpolate into single-quoted strings
+# 0 (and everything other than nil and false itself) is true.
+# Note that Ruby functions have an implicit return, meaning they return the last statement evaluated
+>> a = [42, 8, 17]
+=> [42, 8, 17]
+>> a.sort!
+=> [8, 17, 42]
+>> a
+=> [8, 17, 42]
+
+>> 3.times { puts "Betelgeuse!" }   # 3.times takes a block with no variables.
+"Betelgeuse!"
+"Betelgeuse!"
+"Betelgeuse!"
+=> 3
+>> (1..5).map { |i| i**2 }          # The ** notation is for 'power'.
+=> [1, 4, 9, 16, 25]
+>> %w[a b c]                        # Recall that %w makes string arrays.
+=> ["a", "b", "c"]
+>> %w[a b c].map { |char| char.upcase }
+=> ["A", "B", "C"]
+>> %w[A B C].map { |char| char.downcase }
+=> ["a", "b", "c"]
+
+- Get random name which lenght=8:
+>> ('a'..'z').to_a.shuffle[0..7].join
+=> "rpjezhyd" 
+
+# As a result of having less baggage, symbols are easier to compare to each 
+other; strings need to be compared character by character, while symbols can be compared all in one go. This makes them ideal for use as hash keys.
+>> user = { :name => "Michael Hartl", :email => "michael@example.com" }
+=> {:name=>"Michael Hartl", :email=>"michael@example.com"}
+>> user[:name]              # Access the value corresponding to :name. 
+=> "Michael Hartl"
+>> user[:password]          # Access the value of an undefined key. 
+=> nil
+
+>> h1 = { :name => "Michael Hartl", :email => "michael@example.com"}
+=> {:name=>"Michael Hartl", :email=>"michael@example.com"} 
+>> h2 = { name: "Michael Hartl", email: "michael@example.com" }
+=> {:name=>"Michael Hartl", :email=>"michael@example.com"}
+>> h1 == h2
+=> true
+
+>> p :name             # Same as 'puts :name.inspect' 
+:name
+
+>> class String 
+>>   # Returns true if the string is its own reverse. 
+>>   def palindrome?
+>>     self == self.reverse
+>>   end 
+>> end 
+=> nil
+>> "deified".palindrome?
+=> true
+
+def string_shuffle(s)
+ s.split('').shuffle.join
+end
+
+>> string_shuffle("foobar")
+=> "aroobf" 
+
+Ruby API http://ruby-doc.org/
+
+=============================================================================
+Ch 5 - Bootstrap, Sass, Named Routes, Pretty RSpec
+=============================================================================
+- The mockups in the Ruby on Rails Tutorial are made with an excellent online 
+mockup application called Mockingbird.
+
+- Bootstrap:
+# add to Gemfile:
+gem 'bootstrap-sass', '2.0.0'
+
+- add app/assets/stylesheets/custom.css.scss with this to includes the entire
+Bootstrap CSS framework:
+@import "bootstrap";
+
+- Partials for organize layout
+ <%= render 'layouts/shim' %> 
+ app/views/layouts/_shim.html.erb  NOTE: partials template file name with
+ leading underscore.
+
+- The default manifest file for app-specific CSS:
+app/assets/stylesheets/application.css
+
+- With the asset pipeline, in production all the application stylesheets get 
+rolled into one CSS file (application.css), all the application JavaScript 
+code gets rolled into one JavaScript file (javascripts.js), and all such files 
+(including those in lib/assets and vendor/assets) are minified to remove the 
+unnecessary whitespace that bloats file size. As a result, we get the best of 
+both worlds: multiple nicely formatted files for programmer convenience, with 
+single optimized files in production.
+
+- Sass (Syntactically Awesome Stylesheets) is a language for writing 
+stylesheets that improves on CSS in many ways. In this section, we cover two 
+of the most important improvements, nesting and variables. (A third technique,
+ mixins, is introduced in Section 7.1.1.)
+
++++++++++  Nesting ++++++++++++++++++++++
+#logo {
+  float: left;
+  ...
+}
+
+#logo :hover {
+  ...
+}
+
+==>>>
+#logo {
+  float: left;
+  ...
+  & :hover {
+    ...
+  }
+}
+++++++++++ Variables +++++++++++++++++++++
+$lightGray: #999;
+
+h2 {
+  color: $lightGray;
+}
+ - Bootstrap framework defines a large number of variables for colors, 
+ available online on the Bootstrap page of LESS variables. That page defines 
+ variables using LESS, not Sass, but the bootstrap-sass gem provides the Sass
+  equivalents. It is not difficult to guess the correspondence; where LESS 
+  uses an “at” sign @, Sass uses a dollar sign $. 
+
+
+- The RailsCast on CoffeeScript basics is a good place to start for CoffeeScript.
+- foobar.js.erb.coffee
+gets run through both CoffeeScript and ERb (with the code running from right to
+ left, i.e., CoffeeScript first).
+
+From:
+get 'static_pages/help'
+To:
+match '/help', to: 'static_pages#help'
+- This arranges both for a valid page at /help and a named route called 
+help_path that returns the path to that page. (Actually, using get in place 
+of match gives the same named routes, but using match is more conventional.)
+
+root to: 'static_pages#home'
+- This code maps the root URI / to /static_pages/home, and also gives URI 
+helpers as follows:
+root_path => '/'
+root_url  => 'http://localhost:3000/'
+
+$ git rm public/index.html
+
+- NOTE: change route file shoud restart app to take effect. (both spork and 'rails s')
+
+- Pretty RSpec:
+before { visit root_path }
+subject { page }
+
+- Files in the spec/support directory are automatically included by RSpec
+- RSpec shared_examples_for and it_should_behave_like, click_link
+
+=============================================================================
+Ch 6 - Model
+=============================================================================
+$ rails generate model User name:string email:string
+$ bundle exec rake db:migrate
+$ bundle exec rake db:rollback
+$ bundle exec annotate --position before
+
+$ rails console --sandbox
+>> user = User.new(name: "Michael Hartl", email: "mhartl@example.com")
+>> user.save
+- user.new + user.save == user.create
+>>foo = User.create(name: "Foo", email: "foo@bar.com")
+>> foo.destroy
+>> User.find(3)
+>> User.all
+>> user.reload.email
+>> user.update_attributes(name: "The Dude", email: "dude@abides.org")
+>> user.errors.full_messages
+ => ["Name can't be blank"] 
+
+- Generate db for test: db/test.sqlite3, also can use to reset test db:
+$ bundle exec rake db:test:prepare
+$ rspec spec/models/user_spec.rb 
+
+- The Rubular website has a beautiful interactive interface for making regular 
+  expressions, along with a handy regex quick reference: http://rubular.com/
+
+$ rails generate migration add_index_to_users_email
+class AddIndexToUsersEmail < ActiveRecord::Migration
+  def change
+    add_index :users, :email, unigue: true
+  end
+ 
+
+class User < ActiveRecord::Base
+  attr_accessible :email, :name
+  has_secure_password
+
+  before_save { |user| user.email = email.downcase }
+  
+  validates :name, presence: true, length: { maximum: 50 }
+  VALID_EMAIL_REGEX = /\A[\w+\-.]+@[a-z\d\-.]+\.[a-z]+\z/i
+  validates :email, presence: true, format: { with: VALID_EMAIL_REGEX },
+                    uniqueness: { case_sensitive: false }
+end
+
+- Adding bcrypt-ruby to the Gemfile.
+$ rails generate migration add_password_digest_to_users password_digest:string
+
+- specify is a synonym for it.
+- One advantage of let is that it memoizes its value, which means that it remembers the value from one invocation to the next.
+- has_secure_password
+/Users/wgu/.rvm/gems/ruby-1.9.3-p545@rails3tutorial2ndEd/gems/activemodel-3.2.13/lib/active_model/secure_password.rb
+
+Rails API - http://api.rubyonrails.org/
+
+=============================================================================
+Ch 7 - 
+=============================================================================
+
+
+
