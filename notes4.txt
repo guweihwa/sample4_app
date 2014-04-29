@@ -424,9 +424,11 @@ $ rails console --sandbox
 >> user = User.new(name: "Michael Hartl", email: "mhartl@example.com")
 >> user.save
 - user.new + user.save == user.create
+>> user.valid?
 >>foo = User.create(name: "Foo", email: "foo@bar.com")
 >> foo.destroy
 >> User.find(3)
+>> User.find_by(email: "mhartl@example.com") # new in Rails 4.0
 >> User.all
 >> user.reload.email
 >> user.update_attributes(name: "The Dude", email: "dude@abides.org")
@@ -434,7 +436,7 @@ $ rails console --sandbox
  => ["Name can't be blank"] 
 
 - Generate db for test: db/test.sqlite3, also can use to reset test db:
-$ bundle exec rake db:test:prepare
+$ rake db:migrate RAILS_ENV=test
 $ rspec spec/models/user_spec.rb 
 
 - The Rubular website has a beautiful interactive interface for making regular 
@@ -448,10 +450,10 @@ class AddIndexToUsersEmail < ActiveRecord::Migration
  
 
 class User < ActiveRecord::Base
-  attr_accessible :email, :name
+  #attr_accessor :email, :name  ## NOT FOR Rails 4.0
   has_secure_password
 
-  before_save { |user| user.email = email.downcase }
+  before_save { self.email = email.downcase }
   
   validates :name, presence: true, length: { maximum: 50 }
   VALID_EMAIL_REGEX = /\A[\w+\-.]+@[a-z\d\-.]+\.[a-z]+\z/i
