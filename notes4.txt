@@ -321,6 +321,11 @@ mockup application called Mockingbird.
 # add to Gemfile:
 gem 'bootstrap-sass', '2.0.0'
 
+- add a line to config/application.rb to make bootstrap-sass compatible with 
+the asset pipeline
+config.assets.precompile += %w(*.png *.jpg *.jpeg *.gif)
+
+
 - add app/assets/stylesheets/custom.css.scss with this to includes the entire
 Bootstrap CSS framework:
 @import "bootstrap";
