@@ -81,6 +81,9 @@ $ heroku run rake db:migrate
 # This should only be used if your Heroku deploy fails without it.
 $ rake assets:precompile
 
+$ rake -T db
+$ rake -T
+
 =============================================================================
 Ch 2 - Scaffold:
 =============================================================================
