@@ -77,6 +77,7 @@ $ heroku create
 $ heroku rename pegasus-rails4-app
 $ git push heroku master
 $ heroku run rake db:migrate
+$ heroku run console
 
 # This should only be used if your Heroku deploy fails without it.
 $ rake assets:precompile
@@ -475,8 +476,42 @@ $ rails generate migration add_password_digest_to_users password_digest:string
 Rails API - http://api.rubyonrails.org/
 
 =============================================================================
-Ch 7 - 
+Ch 7 - Sign Up
 =============================================================================
+Add in page for debug:
+<%= debug(params) if Rails.env.development? %>
 
+- Sass mixin facility, in this case called box_sizing. A mixin allows a group 
+of CSS rules to be packaged up and used for multiple elements.
+
+- Add resources :users in routes to get REST-style URL for User:
+HTTP       URL          Action    Named route           Purpose
+request
+GET       /users        index     users_path            page to list all users
+GET       /users/1      show      user_path(user)       page to show user
+GET       /users/new    new       new_user_path         page to make a new user (signup)
+POST      /users        create    users_path            create a new user
+GET       /users/1/edit edit      edit_user_path(user)  page to edit user with id 1
+PATCH     /users/1      update    user_path(user)       update user
+DELETE    /users/1      destroy   user_path(user)       delete user
+
+- Defining Active Record objects:
+gem 'factory_girl_rails', '4.2.1'
+
+let(:user) { FactoryGirl.create(:user) }
+
+- Defining a gravatar_for helper method in app/helpers/users_helper.rb to get 
+image based upon email.
+
+- reset DB
+$ rake db:reset
+$ rake db:migrate RAILS_ENV=test
+
+<%= form_for(@user) do |f| %>
+      <%= f.label :name %>
+      <%= f.text_field :name %>
+<% end %>
+
+$ bundle exec rspec spec/requests/user_pages_spec.rb -e "signup page"
 
 
