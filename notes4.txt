@@ -315,6 +315,9 @@ end
 
 Ruby API http://ruby-doc.org/
 
+self.var_one = method(args) will call the method var_one= on self with the argument method(args).
+
+
 =============================================================================
 Ch 5 - Bootstrap, Sass, Named Routes, Pretty RSpec
 =============================================================================
@@ -489,9 +492,11 @@ HTTP       URL          Action    Named route           Purpose
 request
 GET       /users        index     users_path            page to list all users
 GET       /users/1      show      user_path(user)       page to show user
-GET       /users/new    new       new_user_path         page to make a new user (signup)
+GET       /users/new    new       new_user_path         page to make a new user
+                                                        (signup)
 POST      /users        create    users_path            create a new user
-GET       /users/1/edit edit      edit_user_path(user)  page to edit user with id 1
+GET       /users/1/edit edit      edit_user_path(user)  page to edit user with 
+                                                        id 1
 PATCH     /users/1      update    user_path(user)       update user
 DELETE    /users/1      destroy   user_path(user)       delete user
 
@@ -514,15 +519,56 @@ $ rake db:migrate RAILS_ENV=test
 
 $ bundle exec rspec spec/requests/user_pages_spec.rb -e "signup page"
 
+- Strong parameters in the controller layer:
+params.require(:user).permit(:name, :email, :password, :password_confirmation)
+
 =============================================================================
 Ch 8 - Sign In/Out
 =============================================================================
+- resources :sessions, only: [:new, :create, :destroy]
+
 - complete list of the route
 $rake routes
+
+- The main difference between signin and the signup form is that we have no Session model, and hence no analogue for the @user variable.  In the case of sessions we need to indicate the name of the resource and the corresponding URL:
+form_for(:session, url: sessions_path)
+
+- By default, all the helpers are available in the views but not in the controllers. We need the methods from the Sessions helper in both places, so we have to include it explicitly. Including the Sessions helper module into the Application controller: app/controllers/application_controller.rb
+
+- Traditional Rails session (via the special session function) to store a remember token equal to the user’s id:
+session[:remember_token] = user.id
+This session object makes the user id available from page to page by storing it in a cookie that expires upon browser close.
+
+- RememberMe for persistent:
+$ rails generate migration add_remember_token_to_users
+$ bundle exec rake db:migrate
+$ bundle exec rake db:migrate RAILS_ENV=test
+
+- base64: A-Z, a-z, 0-9, '-' and '_'.  3 bytes-> 2^6 -> 64
+
+- Note the use of update_attribute to save the token. As mentioned briefly in Section 6.1.5), this method allows us to update a single attribute while bypassing the validations—necessary in this case since we don’t have the user’s password or confirmation.
 
 cookies[:remember_token] = { value:   remember_token,
                              expires: 20.years.from_now.utc }
 
 - Rails allows us to link directly to the user, in this context automatically converting current_user into user_path(current_user)
 
-                             
+ =============================================================================
+Ch 9 - update, view and delete users
+=============================================================================
+- Apart from Capybara’s visit method, to access a controller action: by issuing the appropriate HTTP request directly, in this case using the patch method to issue a PATCH request:
+before { patch user_path(user) }
+
+- When using one of the methods to issue HTTP requests directly, we get access to the low-level response object. Unlike the Capybara page object, response lets us test for the server response itself
+
+- the before_action command to arrange for a particular method to be called before the given actions.
+
+$ bundle exec rake db:reset
+$ bundle exec rake db:populate
+$ bundle exec rake db:migrate RAILS_ENV=test
+
+<ul class="users">
+  <%= render @users %>
+</ul>
+- Here Rails infers that @users is a list of User objects; moreover, when called with a collection of users, Rails automatically iterates through them and renders each one with the _user.html.erb partial.
+
