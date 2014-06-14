@@ -553,7 +553,7 @@ cookies[:remember_token] = { value:   remember_token,
 
 - Rails allows us to link directly to the user, in this context automatically converting current_user into user_path(current_user)
 
- =============================================================================
+=============================================================================
 Ch 9 - update, view and delete users
 =============================================================================
 - Apart from Capybara’s visit method, to access a controller action: by issuing the appropriate HTTP request directly, in this case using the patch method to issue a PATCH request:
@@ -577,4 +577,19 @@ $ heroku pg:reset DATABASE
 $ heroku run rake db:migrate
 $ heroku run rake db:populate
 $ heroku restart
+
+=============================================================================
+Ch 10 - Micorpost model
+=============================================================================
+
+Instead of
+Micropost.create
+Micropost.create!
+Micropost.new
+
+we have
+user.microposts.create
+user.microposts.create!
+user.microposts.build
+
 
